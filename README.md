@@ -1,12 +1,12 @@
 # Capstone Project Team_54
 
-This repository contains the complete data analytics and machine learning pipeline for the **Admissions Data Analytics Capstone Project**. It includes scripts for **data preprocessing**, **feature engineering**, **exploratory data analysis (EDA)**, **model training**, and **SHAP-based explainability**.
+This repository contains the complete **end-to-end machine learning pipeline** for the **Admissions Data Analytics Capstone Project**. It includes scripts and notebooks for **data preprocessing**, **feature engineering**, **exploratory data analysis (EDA)**, **model training**, and **SHAP-based explainability**.
 
-
+---
 
 ## 📁 Folder Structure
 
-
+```
 Capstone Project Team_54/
 │
 ├── data/
@@ -25,20 +25,22 @@ Capstone Project Team_54/
 ├── src/
 │   ├── full_pipeline_capstone_project_team_54.py
 │   ├── insights_capstone_project_team_54.py
-│   ├── insights_capstone_project-team_54.ipynb
-│   └── full_pipeline_capstone_project_team_54.ipynb
+│   ├── full_pipeline_capstone_project_team_54.ipynb
+│   └── insights_capstone_project-team_54.ipynb
 │
-├── .gitattributes
-├── .gitignore
 ├── README.md
-└── requirements.txt
+├── requirements.txt
+├── .gitignore
+└── .gitattributes
+```
 
+---
 
-##  Running the Project
+## Running the Project
 
 ### 1️⃣ Change Directory
 
-Open **CMD** and navigate to the `src` folder:
+Open **CMD** or **Anaconda Prompt** and navigate to the `src` folder:
 
 ```bash
 cd "C:\Users\<user name>\Capstone Project Team_54\src"
@@ -46,55 +48,45 @@ cd "C:\Users\<user name>\Capstone Project Team_54\src"
 
 ---
 
-### 2️⃣ Run the Full Pipeline Script
+### 2️⃣ Run Python Scripts
 
 #### **Development Mode**
 
-Runs the complete end-to-end ML workflow — data preprocessing, feature engineering, model training, evaluation, visualization, and saving the best model.
+Executes the complete machine learning pipeline — data preparation, feature engineering, model training, evaluation, and visualization.
 
 ```bash
 python full_pipeline_capstone_project_team_54.py --mode develop
 ```
 
-**Actions Performed:**
+✅ **What Happens:**
 
-* Loads the admissions dataset from `data/`
-* Cleans and preprocesses data
-* Adds derived features (e.g., AGE_NUM, IS_DOMESTIC, etc.)
-* Trains multiple ML models (Logistic Regression, Random Forest, XGBoost, MLP, Naive Bayes)
-* Performs GridSearchCV tuning for XGBoost
-* Evaluates models with metrics: Accuracy, Precision, Recall, F1, ROC_AUC
-* Generates and saves:
-
-  * Feature importance plots
-  * ROC curves
-  * Confusion matrix
-  * Model performance comparison
-* Saves best-performing model as `.pkl` in `model/`
-* Outputs performance metrics to `results/plots/`
+* Loads the admissions dataset from `/data`
+* Performs data cleaning and feature engineering
+* Trains ML models (Logistic Regression, Random Forest, XGBoost, MLP, Naive Bayes)
+* Evaluates performance using Accuracy, Precision, Recall, F1, and ROC_AUC
+* Saves all plots and the best-performing model
 
 ---
 
 #### **Usage Mode**
 
-Uses the trained model to score new/unseen data and generate lead scores.
+Applies the saved best model to new/unseen data and produces lead scores.
 
 ```bash
 python full_pipeline_capstone_project_team_54.py --mode usage
 ```
 
-**Actions Performed:**
+✅ **What Happens:**
 
-* Loads saved best model (`best_model_20250925_capstone_admissions.pkl`)
-* Predicts lead scores and categories (`Hot`, `Warm`, `Cold`)
-* Aggregates predictions at the `PERSONID` level
+* Loads the trained model from `/model`
+* Predicts lead probabilities and assigns categories (`Hot`, `Warm`, `Cold`)
 * Saves scored results to `results/scored_leads.csv`
 
 ---
 
-### 3️⃣ Run the Insights Script Separately (Optional)
+### 3️⃣ Run Insights Script (EDA + SHAP Explanations)
 
-For EDA and SHAP explanations only:
+#### **Non-Interactive Mode (Saves Plots):**
 
 ```bash
 python insights_capstone_project_team_54.py 
@@ -103,124 +95,156 @@ python insights_capstone_project_team_54.py
 
 ---
 
-##  Overview of `full_pipeline_capstone_project_team_54.py`
+### 4️⃣ Run Jupyter Notebooks (Interactive Mode)
 
-### 🔹 Imports
+If you prefer **notebooks** for interactive analysis or presentation:
 
-Includes libraries for data handling, visualization, preprocessing, model training, and evaluation:
+| Notebook                                       | Purpose                                                        |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `insights_capstone_project-team_54.ipynb`      | Interactive EDA and SHAP visualization                         |
+| `full_pipeline_capstone_project_team_54.ipynb` | Full ML pipeline (feature engineering → training → evaluation) |
 
-* **Core:** pandas, numpy, os, re, argparse
-* **Visualization:** matplotlib, seaborn
-* **ML Models:** LogisticRegression, RandomForestClassifier, XGBClassifier, MLPClassifier, MultinomialNB
-* **Preprocessing:** OneHotEncoder, StandardScaler, SimpleImputer, ColumnTransformer, PCA
-* **Evaluation:** accuracy, precision, recall, f1, ROC_AUC, confusion_matrix, roc_curve
-* **Utilities:** joblib for saving/loading models
+#### **Launch Jupyter:**
 
----
+```bash
+jupyter notebook
+```
 
-### 🔹 Feature Engineering (`add_features`)
+Then open either notebook from:
 
-* Converts **AGE_RANGE** to a numeric midpoint (`AGE_NUM`)
-* One-hot encodes **SEX**
-* Generates binary flags for:
-
-  * Domestic status (`IS_DOMESTIC`)
-  * Scholarship (`HAS_SCHOLARSHIP`)
-  * Disability (`HAS_DISABILITY`)
-  * Current and Research students
-  * Australian campus flag (`IS_AUS_CAMPUS`)
-  * Indigenous indicators (`IS_ATSI`)
-* Groups faculties and courses based on frequency
-* Creates time-based features: `DAYS_TO_ENROLL`, `RECENCY_DAYS`, `AVG_ACTION_GAP`
-* Defines the binary target `lead_target` = 1 if *ENROL* or *ACCEPT*
-
----
-
-### 🔹 Preprocessing (`preprocess_data`)
-
-* Removes irrelevant or unknown entries
-* Filters valid course types (`PG`, `UG`, `NAWD`)
-* Handles missing values using `SimpleImputer`
-* Standardizes numerical variables using `StandardScaler`
-* One-hot encodes categorical variables
-
-Returns:
-
-```python
-X, y, preprocessor
+```
+src/
 ```
 
 ---
 
-### 🔹 Model Training (`get_models`)
+##  Overview of the Full Pipeline
 
-Defines multiple ML pipelines:
+### 🔹 Feature Engineering
+
+* Converts categorical ranges (e.g., AGE_RANGE → AGE_NUM)
+* Creates binary flags (domestic status, scholarship, disability, etc.)
+* Generates time-based features (`DAYS_TO_ENROLL`, `RECENCY_DAYS`, `AVG_ACTION_GAP`)
+* Defines the target variable (`lead_target` = 1 if *ENROL* or *ACCEPT*)
+
+---
+
+### 🔹 Preprocessing
+
+* Handles missing values with `SimpleImputer`
+* Scales numerical features with `StandardScaler`
+* Encodes categorical features via `OneHotEncoder`
+* Returns processed training data for modeling
+
+---
+
+### 🔹 Model Training
+
+Trains multiple algorithms wrapped in Scikit-learn pipelines:
 
 * Logistic Regression
 * Random Forest
 * XGBoost (GridSearch tuned)
-* Neural Network (MLP with PCA)
-* Naive Bayes (categorical-only)
+* Multilayer Perceptron (MLP)
+* Naive Bayes (categorical baseline)
 
-Each model is wrapped in a pipeline with preprocessing steps.
+Each model is compared on **F1-score**, and the best one is saved.
 
 ---
 
 ### 🔹 Evaluation & Visualization
 
-Functions include:
-
-* `evaluate_and_score()` — Fits model, computes metrics, and assigns lead categories (`Hot`, `Warm`, `Cold`).
-* `plot_metrics()` — Bar chart of model comparison.
-* `plot_roc_curves()` — ROC-AUC visualization for all models.
-* `plot_confusion_matrix()` — Confusion matrix heatmap for best model.
-* `plot_feature_importance()` — Displays and saves top 15 important features.
-* `rank_top_models()` — Ranks models based on F1-score.
+* **Confusion Matrix** and **ROC Curves** for each model
+* **Feature Importance (XGBoost & SHAP)**
+* **Performance Comparison Bar Charts**
+* **Ranked Model Summary**
 
 ---
 
-### 🔹 Model Saving and Scoring
+### 🔹 Model Saving & Scoring
 
-* Best-performing model is saved as:
-
-  ```
-  model/best_model_20250925_capstone_admissions.pkl
-  ```
-* In usage mode, predictions and lead scores are saved as:
-
-  ```
-  results/scored_leads.csv
-  ```
+* Best-performing model → `model/best_model_20250925_capstone_admissions.pkl`
+* Scored outputs → `results/scored_leads.csv`
+* Feature importance table → `results/feature_importance_XGBoost.csv`
 
 ---
 
 ## 📊 Outputs
 
-| Output File                                   | Description                          |
+| File                                          | Description                          |
 | --------------------------------------------- | ------------------------------------ |
-| `feature_importance_XGBoost.csv`              | Ranked feature importances           |
+| `feature_importance_XGBoost.csv`              | Feature importance scores            |
 | `metrics_comparison.png`                      | Model performance comparison         |
-| `roc_curves.png`                              | ROC-AUC visualization                |
-| `confusion_matrix_<Model>.png`                | Confusion matrix for top model       |
-| `scored_leads.csv`                            | Predicted lead scores and categories |
-| `best_model_20250925_capstone_admissions.pkl` | Saved trained model                  |
+| `roc_curves.png`                              | ROC curve comparison                 |
+| `confusion_matrix_<Model>.png`                | Confusion matrix visualization       |
+| `scored_leads.csv`                            | Predicted lead categories and scores |
+| `best_model_20250925_capstone_admissions.pkl` | Serialized trained model             |
 
 ---
 
 
+Install them with:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🧾 .gitignore
+
+Typical `.gitignore` configuration for this project:
+
+```
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Data & model artifacts
+/data/
+*.pkl
+*.csv
+
+# Plots and results
+/results/plots/
+*.png
+
+# Environment and IDE
+.env
+.vscode/
+.ipynb_checkpoints/
+.DS_Store
+
+# Virtual environments
+venv/
+env/
+```
+
+---
+
+## ⚙️ .gitattributes
+
+Ensures consistent line endings and proper file handling across platforms:
+
+```
+# Handle line endings automatically
+* text=auto
+
+# Treat notebooks as binary to avoid merge conflicts
+*.ipynb binary
+```
 
 ---
 
 ## 📘 Notes
 
-* The script automatically detects execution mode (`develop` or `usage`) via command-line arguments.
-* All output artifacts are saved under the `results/` and `model/` folders.
-* Modular functions allow reuse of preprocessing, model evaluation, and visualization components.
+* The project supports both **script-based automation** and **interactive notebook workflows**.
+* All generated outputs are stored in structured directories for traceability.
+* Modular code design allows easy updates, retraining, or scaling for new datasets.
 
 ---
 
 **Author:** Abu BHUIYAN
 **University:** Canberra University — Master of Data Science
 **Date:** October 2025
-"Trigger push" 
-ECHO is on.

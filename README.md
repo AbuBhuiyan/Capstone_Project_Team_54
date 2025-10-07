@@ -52,8 +52,11 @@ Capstone Project Team_54/
 │   ├── insights_capstone_project-team_54.ipynb
 │   └── full_pipeline_capstone_project_team_54.ipynb
 │
+├── .gitattributes
+├── .gitignore
 ├── README.md
 └── requirements.txt
+
 
 ##  Running the Project
 

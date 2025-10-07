@@ -1,0 +1,9 @@
+# Ignore Jupyter notebook checkpoints
+**/.ipynb_checkpoints/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore model artifacts if you want (optional)
+# model/*.pkl

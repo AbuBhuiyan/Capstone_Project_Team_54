@@ -2,35 +2,11 @@
 
 This repository contains the complete data analytics and machine learning pipeline for the **Admissions Data Analytics Capstone Project**. It includes scripts for **data preprocessing**, **feature engineering**, **exploratory data analysis (EDA)**, **model training**, and **SHAP-based explainability**.
 
----
+
 
 ## 📁 Folder Structure
 
-```
-Capstone Project Team_54/
-│
-├── data/
-│   └── Anonymised - 20250925_capstone_admissions.csv
-│
-├── model/
-│   └── best_model_20250925_capstone_admissions.pkl
-│
-├── results/
-│   ├── feature_importance_XGBoost.csv
-│   ├── scored_leads.csv
-│   ├── shap_feature_importance_table.csv
-│   └── plots/
-│       ├── *.png
-│
-├── src/
-│   ├── full_pipeline_capstone_project_team_54.py
-│   └── insights_capstone_project_team_54.py
-│
-├── README.md
-└── requirements.txt
-```
 
----
 Capstone Project Team_54/
 │
 ├── data/

@@ -370,148 +370,8 @@ def train_best_model(df):
 
     return model, X_train, X_test, y_train, y_test  
 
-'''# ------------------------------
-# Run SHAP analysis
-# ------------------------------
-def shap_insights(model, X_train, X_test, save_dir="../results/plots"):
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test)
-
-    # ------------------------------
-    #  Compute SHAP importance table
-    # ------------------------------
-    shap_importance = pd.DataFrame({
-        "Feature": X_test.columns,
-        "Mean |SHAP Value|": np.abs(shap_values).mean(axis=0)
-    }).sort_values("Mean |SHAP Value|", ascending=False)
-
-    print("\n=== SHAP Feature Importance (Top 20) ===")
-    print(shap_importance.head(20))
-
-    # Save to CSV
-    # Save to results
-    shap_table_path = os.path.join(os.path.dirname(save_dir), "shap_feature_importance_table.csv")
-    shap_importance.to_csv(shap_table_path, index=False)
-    print(f" Saved SHAP importance table → {shap_table_path}")
-
-    # Global importance (bar)
-    shap.summary_plot(shap_values, X_test, plot_type="bar", show=False)
-    plt.tight_layout()
-    plt.savefig(f"{save_dir}/shap_feature_importance.png")
-    
-    plt.close()
-    print(f" Saved SHAP bar plot → {save_dir}/shap_feature_importance.png")
-
-    # Beeswarm (distribution of impact)
-    shap.summary_plot(shap_values, X_test, show=False)
-    plt.tight_layout()
-    plt.savefig(f"{save_dir}/shap_beeswarm.png")
-   
-    plt.close()
-    print(f" Saved SHAP beeswarm plot → {save_dir}/shap_beeswarm.png")
-
-    # Example local explanation for first row
-    idx = 0
-
-    # ------------------------------
-    #  Compute log-odds and probability
-    # ------------------------------
-    log_odds = explainer.expected_value + shap_values[idx, :].sum()
-    prob = 1 / (1 + np.exp(-log_odds))
-    print(f"f(x) = {log_odds:.2f}, Probability = {prob:.3%}")
-
-    # ------------------------------
-    #  Identify top 10 features by absolute SHAP value
-    # ------------------------------
-    abs_shap = np.abs(shap_values[idx, :])
-    top_idx = np.argsort(abs_shap)[-10:]  # top 10 features
-
-    # ------------------------------
-    #  Plot SHAP force plot for top 10 features
-    # ------------------------------
-    shap.force_plot(
-        explainer.expected_value,
-        shap_values[idx, top_idx],
-        X_test.iloc[idx, top_idx],
-        matplotlib=True,
-        show=False
-    )
-
-    plt.tight_layout()
-   
-    plt.savefig(f"{save_dir}/shap_force_row0_top10.png", bbox_inches="tight", dpi=200)
-    plt.close()
-    print(f"Saved SHAP force plot (Top 10 features) → {save_dir}/shap_force_row0_top10.png")
 
 
-
-# ------------------------------
-# Main function
-# ------------------------------
-def main(args=None):
-    parser = argparse.ArgumentParser(description="Generate insights and plots from admissions CSV")
-    parser.add_argument("--csv", required=True, help="Path to CSV file")
-    parser.add_argument("--save", action="store_true", help="Save plots instead of showing")
-    parser.add_argument("--plot_dir", default="plots", help="Directory to save plots")
-    
-    if args is None:
-        args = sys.argv[1:]
-    args = parser.parse_args(args)
-
-    # Load data
-    df = pd.read_csv(args.csv)
-    print(f"Loaded CSV with shape: {df.shape}")
-
-    #Add feature + EDA
-    df = add_features(df)
-    additional_insights_row(df, save_plots=args.save, plot_dir=args.plot_dir)\
-    
-    # Train best model
-    model, X_train, X_test, y_train, y_test = train_best_model(df)
-
-    # Run SHAP insights
-    shap_insights(model, X_train, X_test, save_dir=args.plot_dir)
-    print("Done.")
-
-# ------------------------------ 
-# Run script
-# ------------------------------
-if __name__ == "__main__":
-    # Base paths
-    try:
-        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    except NameError:
-        BASE_DIR = os.getcwd()
-
-    DATA_DIR = os.path.join(BASE_DIR, "data")
-    RESULTS_DIR = os.path.join(BASE_DIR, "results")
-    PLOTS_DIR = os.path.join(RESULTS_DIR, "plots")
-    os.makedirs(PLOTS_DIR, exist_ok=True)
-
-    # CSV path
-    csv_file = "Anonymised - 20250925_capstone_admissions.csv"
-    csv_path = os.path.join(DATA_DIR, csv_file)
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"CSV file not found at {csv_path}")
-
-    # Interactive mode (VSCode/Jupyter)
-    if len(sys.argv) == 1 or hasattr(sys, 'ps1') or 'ipykernel' in sys.modules:
-        print("Running in interactive mode (VSCode/Jupyter)")
-        df = pd.read_csv(csv_path)
-        df = add_features(df)
-        additional_insights_row(df, save_plots=True, plot_dir=PLOTS_DIR)
-
-        # Train + SHAP in interactive mode
-        model, X_train, X_test, y_train, y_test = train_best_model(df)
-        shap_insights(model, X_train, X_test, save_dir=PLOTS_DIR)
-
-    else:
-        # CMD mode
-        main()'''
-
-# ------------------------------
-# Run SHAP analysis
-# ------------------------------
 # ------------------------------
 # Run SHAP analysis
 # ------------------------------
@@ -650,13 +510,13 @@ if __name__ == "__main__":
 
     # Detect interactive mode
     if len(sys.argv) == 1 or hasattr(sys, "ps1") or "ipykernel" in sys.modules:
-        print("Running in interactive mode (VSCode/Jupyter)")
+        print("Running in interactive mode ,saving *.csv in results folder and *.PNG in results/plots(VSCode/Jupyter)")
         df = pd.read_csv(csv_path)
         df = add_features(df)
         additional_insights_row(df, save_plots=True, plot_dir=PLOTS_DIR)  # show plots interactively
 
         model, X_train, X_test, y_train, y_test = train_best_model(df)
-        shap_insights(model, X_train, X_test, save_plots=True, save_dir=PLOTS_DIR)  # show SHAP plots nteractively
+        shap_insights(model, X_train, X_test, save_plots=True, save_dir=PLOTS_DIR)  # show SHAP plots interactively
     else:
         main()
 

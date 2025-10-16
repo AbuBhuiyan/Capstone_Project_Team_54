@@ -17,15 +17,16 @@ Capstone Project Team_54/
 │
 ├── results/
 │   ├── feature_importance_XGBoost.csv
-│   ├── scored_leads.csv
+│   ├── scored_leads_summary.csv              
 │   ├── shap_feature_importance_table.csv
 │   └── plots/
-│       ├── *.png
+│       └── *.png
 │
 ├── src/
-│   ├── full_pipeline_capstone_project_team_54.py
+│   ├── full_pipeline_develop_usage.py        
 │   ├── insights_capstone_project_team_54.py
-│   ├── full_pipeline_capstone_project_team_54.ipynb
+│   ├── full_pipeline_develop_mode.ipynb      
+│   ├── full_pipeline_usage_mode.ipynb        
 │   └── insights_capstone_project-team_54.ipynb
 │
 ├── README.md
@@ -43,7 +44,7 @@ Capstone Project Team_54/
 Open **CMD** or **Anaconda Prompt** and navigate to the `src` folder:
 
 ```bash
-cd "C:\Users\<user name>\Capstone Project Team_54\src"
+cd "C:\Users\<user name>\Capstone Project Team_54"
 ```
 
 ---
@@ -55,7 +56,7 @@ cd "C:\Users\<user name>\Capstone Project Team_54\src"
 Executes the complete machine learning pipeline — data preparation, feature engineering, model training, evaluation, and visualization.
 
 ```bash
-python full_pipeline_capstone_project_team_54.py --mode develop
+python src\full_pipeline_capstone_project_team_54.py --mode develop
 ```
 
 ✅ **What Happens:**
@@ -73,7 +74,7 @@ python full_pipeline_capstone_project_team_54.py --mode develop
 Applies the saved best model to new/unseen data and produces lead scores.
 
 ```bash
-python full_pipeline_capstone_project_team_54.py --mode usage
+python src\full_pipeline_capstone_project_team_54.py --mode usage
 ```
 
 ✅ **What Happens:**
@@ -89,7 +90,7 @@ python full_pipeline_capstone_project_team_54.py --mode usage
 #### **Non-Interactive Mode (Saves Plots):**
 
 ```bash
-python insights_capstone_project_team_54.py 
+python src\insights_capstone_project_team_54.py 
 ```
 
 
@@ -98,6 +99,7 @@ python insights_capstone_project_team_54.py
 ### 4️⃣ Run Jupyter Notebooks (Interactive Mode)
 
 If you prefer **notebooks** for interactive analysis or presentation:
+# Notebook files are for viewing outputs without running, as running files takes pretty long time
 
 | Notebook                                       | Purpose                                                        |
 | ---------------------------------------------- | -------------------------------------------------------------- |

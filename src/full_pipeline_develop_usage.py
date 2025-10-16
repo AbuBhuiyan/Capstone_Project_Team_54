@@ -2,6 +2,7 @@
 # Imports
 # ===============================
 import re
+import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,10 +11,11 @@ import os
 import argparse
 import joblib
 from joblib import dump
+
 from matplotlib import colormaps
 
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler,MinMaxScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import (
@@ -215,36 +217,59 @@ def get_models(preprocessor, categorical_features, y_train):
 
     return models, param_grids
 
-# ===============================
-# Lead Score Categorization
-# ===============================
-def categorize_lead(score):
-    if score >= 80: return "Hot"
-    elif score >= 50: return "Warm"
-    else: return "Cold"
+
+
 
 # ===============================
 # Evaluation & Scoring
 # ===============================
-def evaluate_and_score(model,X_train,X_test,y_train,y_test):
-    model.fit(X_train,y_train)
+def evaluate_and_score(model, X_train, X_test, y_train, y_test):
+    """
+    Train the model, predict on X_test, calculate performance metrics,
+    assign dynamic Hot/Warm/Cold categories to lead scores, and return
+    results and scored DataFrame.
+    """
+    # Train model
+    model.fit(X_train, y_train)
+
+    # Predictions
     y_pred = model.predict(X_test)
-    y_prob = model.predict_proba(X_test)[:,1] if hasattr(model,"predict_proba") else None
+    y_prob = model.predict_proba(X_test)[:, 1] if hasattr(model, "predict_proba") else None
 
-    results = {'Accuracy':accuracy_score(y_test,y_pred),
-               'Precision':precision_score(y_test,y_pred,zero_division=0),
-               'Recall':recall_score(y_test,y_pred,zero_division=0),
-               'F1':f1_score(y_test,y_pred,zero_division=0)}
+    # Performance metrics
+    results = {
+        'Accuracy': accuracy_score(y_test, y_pred),
+        'Precision': precision_score(y_test, y_pred, zero_division=0),
+        'Recall': recall_score(y_test, y_pred, zero_division=0),
+        'F1': f1_score(y_test, y_pred, zero_division=0)
+    }
     if y_prob is not None:
-        results['ROC_AUC'] = roc_auc_score(y_test,y_prob)
+        results['ROC_AUC'] = roc_auc_score(y_test, y_prob)
 
+    # Prepare scored DataFrame
     scored_df = X_test.copy()
     scored_df['Actual'] = y_test.values
     scored_df['Predicted'] = y_pred
-    scored_df['Lead Score'] = (y_prob*100).round(2) if y_prob is not None else 0
-    scored_df['Category'] = scored_df['Lead Score'].apply(categorize_lead)
+    scored_df['Lead Score'] = (y_prob * 100).round(2) if y_prob is not None else 0
+
+    # -----------------------------
+    # Dynamic Hot/Warm/Cold categorization
+    # -----------------------------
+    hot_threshold = np.percentile(scored_df['Lead Score'], 90)  # top 10%
+    warm_threshold = np.percentile(scored_df['Lead Score'], 50)  # median
+
+    def categorize_lead(score, hot_threshold=hot_threshold, warm_threshold=warm_threshold):
+        if score >= hot_threshold:
+            return "Hot"
+        elif score >= warm_threshold:
+            return "Warm"
+        else:
+            return "Cold"
+
+    scored_df['Category'] = scored_df['Lead Score'].apply(lambda x: categorize_lead(x, hot_threshold, warm_threshold))
 
     return results, scored_df
+
 
 # ===============================
 # Plotting Functions
@@ -265,6 +290,7 @@ def plot_metrics(results_df, results_dir):
     ax.set_xticklabels(results_df.index,rotation=45,ha='right')
     ax.legend(loc='lower right')
     fig.tight_layout()
+    plt.show()
     save_plot(fig,'metrics_comparison.png',results_dir)
 
 def plot_roc_curves(models,X_test,y_test,results_dir):
@@ -283,6 +309,7 @@ def plot_roc_curves(models,X_test,y_test,results_dir):
     ax.set_ylabel("True Positive Rate")
     ax.legend(loc="lower right")
     fig.tight_layout()
+    plt.show()
     save_plot(fig,'roc_curves.png',results_dir)
 
 def plot_confusion_matrix(model,X_test,y_test,model_name,results_dir):
@@ -295,6 +322,7 @@ def plot_confusion_matrix(model,X_test,y_test,model_name,results_dir):
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
     fig.tight_layout()
+    plt.show()
     save_plot(fig,f'confusion_matrix_{model_name.replace(" ","_")}.png',results_dir)
 
 
@@ -349,8 +377,8 @@ def plot_feature_importance(model, preprocessor, X, model_name="Model", results_
 
         ax.set_title(f"Top 15 Features - {model_name}")
         fig.tight_layout()
-
-        save_plot(fig, f'feature_importance_{model_name.replace(" ","_")}.png', results_dir)
+        plt.show()
+        save_plot(fig, f'feature_importance_{model_name.replace(" ","_")}.png', results_dir)        
         plt.close(fig)
 
         return fi_df
@@ -372,25 +400,44 @@ def rank_top_models(results_df, metric='F1', top_n=3):
 # Main Execution
 # ===============================
 if __name__ == "__main__":
+    # -----------------------------
+    # Determine mode
+    # -----------------------------
+    default_mode = "usage"  # fallback if no command-line argument
+
+    try:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--mode", default=default_mode, help="Run mode: develop or usage")
+        args, unknown = parser.parse_known_args()
+        mode = args.mode
+    except Exception:
+        # fallback if argparse fails (e.g., Jupyter or VSCode interactive run)
+        mode = default_mode
+
+    print(f"Running in {mode} mode")
     
 
-    parser = argparse.ArgumentParser(description="Admissions ML pipeline")
-    parser.add_argument("--mode", type=str, default="develop", choices=["develop","usage"])
-    parser.add_argument("--src", type=str, default="../data/Anonymised - 20250925_capstone_admissions.csv")
-    parser.add_argument("--results", type=str, default="../results")
-    args = parser.parse_args()
+    # Get absolute path relative to project root
+    base_dir = os.path.dirname(__file__)  # src/
+    data_path = os.path.abspath(os.path.join(base_dir, "..", "data", "Anonymised - 20250925_capstone_admissions.csv"))
+  
+    results_dir = os.path.abspath(os.path.join(base_dir, "..", "results"))
+    os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(os.path.join(results_dir, "plots"), exist_ok=True)  
 
-    os.makedirs(args.results, exist_ok=True)
-    os.makedirs(os.path.join(args.results,'plots'), exist_ok=True)
+    
+  
 
     # Load and preprocess dataset
-    df = pd.read_csv(args.src)
+    #  Load dataset
+    df = pd.read_csv(data_path)
     df['ADM_ACTION_DATE'] = pd.to_datetime(df['ADM_ACTION_DATE'], dayfirst=True, errors='coerce')
     df = add_features(df)  #  feature engineering function
 
     
 
-    if args.mode == "develop":
+    if mode == "develop":
         
         # Preprocess features
         X, y, preprocessor = preprocess_data(df)  # Returns X, y, preprocessor
@@ -435,8 +482,8 @@ if __name__ == "__main__":
         print(results_df)
     
         # Visualizations
-        plot_metrics(results_df, args.results)
-        plot_roc_curves(fitted_models, X_test, y_test, args.results)
+        plot_metrics(results_df, results_dir)
+        plot_roc_curves(fitted_models, X_test, y_test, results_dir)
         
         # Rank Top Models
         top_models = rank_top_models(results_df, metric='F1', top_n=3)
@@ -446,7 +493,7 @@ if __name__ == "__main__":
         best_model = fitted_models[best_model_name]
 
         # Confusion matrix (only for best model)
-        plot_confusion_matrix(best_model, X_test, y_test, best_model_name, args.results)
+        plot_confusion_matrix(best_model, X_test, y_test, best_model_name, results_dir)
 
         
         # Feature importance (only for best model)
@@ -457,11 +504,11 @@ if __name__ == "__main__":
             preprocessor,
             X,
             model_name=best_model_name,
-            results_dir=args.results
+            results_dir=results_dir
             )
             if fi is not None:
                 # Save full feature importance CSV (sorted descending)
-                fi_path = os.path.join(args.results, f'feature_importance_{best_model_name.replace(" ","_")}.csv')
+                fi_path = os.path.join(results_dir, f'feature_importance_{best_model_name.replace(" ","_")}.csv')
                 fi.to_csv(fi_path, index=False)
                 print(f"✔ Feature importance CSV saved → {fi_path}")
 
@@ -474,8 +521,15 @@ if __name__ == "__main__":
 
 
         # Ensure model folder exists inside project root
-        model_dir = os.path.join(os.path.dirname(__file__), "..", "model")
+        # Handle Jupyter/Notebook vs Script execution
+        try:
+            base_dir = os.path.dirname(__file__)
+        except NameError:
+            base_dir = os.getcwd()   # fallback if __file__ not defined
+
+        model_dir = os.path.join(base_dir, "..", "model")
         os.makedirs(model_dir, exist_ok=True)
+
 
         # Save best model
         best_model_path = os.path.join(model_dir, "best_model_20250925_capstone_admissions.pkl")
@@ -483,39 +537,142 @@ if __name__ == "__main__":
 
         print(f"✔ Best model ({best_model_name}) saved → {best_model_path}")
 
-
-    elif args.mode == "usage":
-        import joblib
-        # Load best model
-        # Model folder path
-        model_dir = os.path.join(os.path.dirname(__file__), "..", "model")
-        best_model_path = os.path.join(model_dir, "best_model_20250925_capstone_admissions.pkl")
-
-        # Load model
-        best_model = joblib.load(best_model_path)
-        print(f" Loaded model from {best_model_path}")
-
+    
+        
+    elif mode == "usage":
         
 
-        # Prepare data for scoring
-        X_new = df.drop(columns=['ADM_ACTION_DETAIL_GROUP', 'lead_target'], errors='ignore')
-        y_prob = best_model.predict_proba(X_new)[:, 1]
+        # -----------------------------
+        # Determine base directories
+        # -----------------------------
+        try:
+            base_dir = os.path.dirname(__file__)
+        except NameError:
+            base_dir = os.getcwd()
+
+        model_dir = os.path.join(base_dir, "..", "model")
+        results_dir = os.path.join(base_dir, "..", "results")
+        plots_dir = os.path.join(results_dir, "plots")
+
+        os.makedirs(results_dir, exist_ok=True)
+        os.makedirs(plots_dir, exist_ok=True)
+
+        # -----------------------------
+        # Load trained best model
+        # -----------------------------
+        best_model_path = os.path.join(model_dir, "best_model_20250925_capstone_admissions.pkl")
+        if not os.path.exists(best_model_path):
+            raise FileNotFoundError(f"❌ Model not found at: {best_model_path}")
+
+        best_model = joblib.load(best_model_path)
+        print(f"✅ Loaded best model from: {best_model_path}")
+
+        # -----------------------------
+        # Prepare features for scoring
+        # -----------------------------
+        feature_cols = [col for col in df.columns if col not in ["ADM_ACTION_DETAIL_GROUP", "lead_target"]]
+        X_new = df[feature_cols].copy()
+
+        # -----------------------------
+        # Predict probabilities
+        # -----------------------------
+        if hasattr(best_model, "predict_proba"):
+            y_prob = best_model.predict_proba(X_new)[:, 1]
+            predicted_lead = best_model.predict(X_new)
+        elif hasattr(best_model, "decision_function"):
+            y_raw = best_model.decision_function(X_new).reshape(-1, 1)
+            y_prob = MinMaxScaler().fit_transform(y_raw).ravel()
+            predicted_lead = (y_prob >= 0.5).astype(int)
+        else:
+            y_prob = best_model.predict(X_new)
+            predicted_lead = (y_prob >= 0.5).astype(int)
+            print("⚠️ Model does not support probabilities; using raw predictions.")
+
+        # -----------------------------
+        # Convert to lead scores (0–100)
+        # -----------------------------
         df["Lead Score"] = (y_prob * 100).round(2)
-        df["Predicted Lead"] = (y_prob >= 0.5).astype(int)
-        df["Category"] = df["Lead Score"].apply(categorize_lead)
+        df["predicted_lead"] = predicted_lead
 
+        # -----------------------------
+        # Dynamic Hot/Warm/Cold categorization
+        # -----------------------------
+        hot_threshold = np.percentile(df["Lead Score"], 90)  # top 10%
+        warm_threshold = np.percentile(df["Lead Score"], 50)  # median
+
+        def categorize_dynamic(score):
+            if score >= hot_threshold:
+                return "Hot"
+            elif score >= warm_threshold:
+                return "Warm"
+            else:
+                return "Cold"
+
+        df["Category"] = df["Lead Score"].apply(categorize_dynamic)
+
+        # -----------------------------
         # Aggregate at PERSONID level
-        person_scores = df.groupby("PERSONID").agg({
-            "Lead Score": "mean",
-            "Predicted Lead": "max",
-            "Category": lambda x: x.mode()[0] if not x.mode().empty else "Cold",
-            "lead_target": "max"
-        }).reset_index()
+        # -----------------------------
+        agg_rules = {
+        "Lead Score": "mean",
+        "Category": lambda x: x.mode()[0] if not x.mode().empty else "Cold",
+        "predicted_lead": "max"
+        }
+        if "lead_target" in df.columns:
+            agg_rules["lead_target"] = "max"
 
-        # Save scored leads
-        person_scores.to_csv(os.path.join(args.results, "scored_leads.csv"), index=False)
-        print(" Scored leads saved in scored_leads.csv")
-        print("\nSample scored leads:")
-        print(person_scores.head())
+        person_scores = df.groupby("PERSONID", as_index=False).agg(agg_rules)
 
+        # Reorder columns exactly as desired
+        cols = ["PERSONID", "Lead Score", "Category", "lead_target", "predicted_lead"]
+        person_scores = person_scores.reindex(columns=cols)
+
+        # -----------------------------
+        # Save results
+        # -----------------------------
+        output_csv = os.path.join(results_dir, "scored_leads_summary.csv")
+        person_scores.to_csv(output_csv, index=False)
+        print(f"💾 Scored leads summary saved to: {output_csv}")
+        print("\n📊 Sample of summary scored leads:")
+        print(person_scores.head(10).to_string(index=False))
+
+        # -----------------------------
+        # Plot Lead Score distribution
+        # -----------------------------
+        plt.figure(figsize=(10, 6))
+        sns.histplot(df["Lead Score"], bins=30, kde=True, color="skyblue")
+        plt.axvline(hot_threshold, color="red", linestyle="--", label=f"Hot Threshold ({hot_threshold:.1f})")
+        plt.axvline(warm_threshold, color="orange", linestyle="--", label=f"Warm Threshold ({warm_threshold:.1f})")
+        plt.title("Lead Score Distribution with Hot/Warm Thresholds")
+        plt.xlabel("Lead Score")
+        plt.ylabel("Count")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(plots_dir, "lead_score_distribution.png"))
+        plt.show()
+
+        # -----------------------------
+        # Plot Category Count Bar
+        # -----------------------------
+        plt.figure(figsize=(7, 5))
+        category_counts = person_scores["Category"].value_counts()
+        sns.barplot(x=category_counts.index, y=category_counts.values, palette="viridis")
+        for i, v in enumerate(category_counts.values):
+            plt.text(i, v + 1, str(v), ha='center', fontweight='bold')
+        plt.title("Number of Leads by Category")
+        plt.xlabel("Category")
+        plt.ylabel("Count")
+        plt.tight_layout()
+        plt.savefig(os.path.join(plots_dir, "lead_category_counts.png"))
+        plt.show()
+
+        # -----------------------------
+        # Plot Category Percentage Pie
+        # -----------------------------
+        plt.figure(figsize=(6, 6))
+        plt.pie(category_counts, labels=category_counts.index, autopct="%1.1f%%", colors=sns.color_palette("viridis", 3))
+        plt.title("Lead Category Percentage Distribution")
+        plt.tight_layout()
+        plt.savefig(os.path.join(plots_dir, "lead_category_pie.png"))
+        plt.show()
 

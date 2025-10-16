@@ -99,7 +99,7 @@ python src\insights_capstone_project_team_54.py
 
 ### 4️⃣ Run Jupyter Notebooks (Interactive Mode)
 
-If you prefer **notebooks** for interactive analysis or presentation:
+If  **notebooks** are preferred for interactive analysis or presentation:
 # Notebook files are for viewing outputs without running, as running files takes pretty long time
 
 | Notebook                                       | Purpose                                                        |

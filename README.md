@@ -10,29 +10,30 @@ This repository contains the complete **end-to-end machine learning pipeline** f
 Capstone Project Team_54/
 │
 ├── data/
-│   └── Anonymised - 20250925_capstone_admissions.csv
+│   ├── Anonymised - 20250925_capstone_admissions.csv  # Raw, anonymised input data
+│   └── cleaned_feature_engineered_data.csv             # Processed data used for modeling
 │
 ├── model/
-│   └── best_model_20250925_capstone_admissions.pkl
+│   └── best_model_20250925_capstone_admissions.pkl     # Final production model (XGBoost)
 │
 ├── results/
-│   ├── feature_importance_XGBoost.csv
-│   ├── scored_leads_summary.csv              
-│   ├── shap_feature_importance_table.csv
+│   ├── feature_importance_XGBoost.csv                  # Tabular results of model feature importance
+│   ├── scored_leads_summary.csv                        # Output table with Hot/Warm/Cold scoring
+│   ├── shap_feature_importance_table.csv               # Tabular results of SHAP analysis
 │   └── plots/
-│       └── *.png
+│       └── *.png                                     # All visual artifacts (ROC, Confusion Matrix, SHAP plots)
 │
 ├── src/
-│   ├── full_pipeline_develop_usage.py        
-│   ├── insights_capstone_project_team_54.py
-│   ├── full_pipeline_develop_mode.ipynb      
-│   ├── full_pipeline_usage_mode.ipynb        
-│   └── insights_capstone_project-team_54.ipynb
+│   ├── full_pipeline_develop_mode.ipynb                # Development notebook for feature engineering/training/testing
+│   ├── full_pipeline_usage_mode.ipynb                  # Usage notebook for scoring new leads
+│   ├── full_pipeline_develop_usage.py                  # Python script version of the full pipeline
+│   ├── insights_capstone_project_team_54.py            # Python script for generating strategic insights
+│   └── insights_capstone_project-team_54.ipynb         # Notebook for exploring and visualizing insights
 │
-├── README.md
-├── requirements.txt
-├── .gitignore
-└── .gitattributes
+├── .gitattributes                                      # Git configuration for file handling (e.g., LFS)
+├── .gitignore                                          # Specifies files/folders Git should ignore
+├── README.md                                           # Project overview and instructions
+└── requirements.txt                                    # Lists project dependencies and versions
 ```
 
 ---
